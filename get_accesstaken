@@ -1,0 +1,43 @@
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+
+//変数を書き換えて利用します。
+String client_id = { ccf218a5578d17aa9c117be27a515137188eb03017e10d288a32599d33bace40 }
+String client_secret ={ eae2d746c0e76f748f2250e458c08e57730210502b2f4c871c624a54142d2760 };
+String redirect_uri = { urn:ietf:wg:oauth:2.0:oob }
+String code = { 20272aed4383c6b7da284300ade8bcb4b67f1dc02f64010844d71d904143d205 }
+String token_url = "https://accounts.secure.freee.co.jp/public_api/token";
+String access_token;
+String refresh_token;
+
+//アクセストークンを取得する。
+HttpResponse<String> response = Unirest.post(token_url)
+.header("Content-Type", "application/json")
+.field("grant_type", authorization_code)
+.field("redirect_uri", redirect_uri)
+.field("client_id", client_id)
+.field("client_secret", client_secret)
+.field("code", code)
+.asJson();
+
+if (response.getStatus() != 200) {
+  throw new HttpException(response.getStatusText());
+}
+
+//リクエストレスポンスからアクセストークンを取得する。
+response = response.getBody();
+JSONArray jsonArray = response.getArray();
+JSONObject jsonObject = jsonArray.getJSONObject();
+access_token = jsonObject.getString("access_token");
+refresh_token = jsonObject.getString("refresh_token");
+
+//リフレッシュトークンを用いてアクセストークンを取得する。
+HttpResponse<String> response = Unirest.post(token_url)
+.header("Content-Type", "application/x-www-form-urlencoded")
+.body("grant_type=" + refresh_token + "&
+  redirect_uri=" + redirect_uri + "&
+  client_id=" + client_id + "&
+  client_secret=" + client_secret + "&
+  refresh_token=" + refresh_token)
+.asJson();
